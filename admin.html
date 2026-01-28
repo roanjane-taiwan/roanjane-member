@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoanJane Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #2c2c2c; font-family: 'Noto Sans TC'; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h2 { color: #E2C8BA; text-align: center; border-bottom: 1px solid #555; padding-bottom: 15px; }
+        
+        #loadingOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid #E2C8BA; border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .card { background: #333; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none; }
+        .card.active { display: block; }
+        
+        /* 快速發送專用樣式 */
+        .quick-box { background: #fff5f5; border: 2px solid #ff7675; padding: 20px; border-radius: 15px; margin-bottom: 20px; color: #333; }
+        
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;}
+        .nav-btn { flex: 1; padding: 12px; background: #444; color: #aaa; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .nav-btn.active { background: #E2C8BA; color: #000; }
+        
+        .label { font-size: 13px; color: #bbb; margin-bottom: 6px; display: block; }
+        .input, .select { width: 100%; padding: 12px; background: #444; border: 1px solid #555; color: white; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; font-size: 16px;}
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-primary { background: #E2C8BA; color: #000; }
+        .btn-danger { background: #e74c3c; color: #fff; padding: 6px 12px; width: auto; font-size: 13px;}
+        .btn-quick { background: #d63031; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; z-index: 999; display: flex; align-items: center; justify-content: center; }
+        
+        .member-info { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #555; }
+        .coupon-item { background: #fff; color: #000; padding: 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="color:white; margin-top:15px;">處理中...</div>
+    </div>
+
+    <div id="loginOverlay">
+        <div style="text-align: center; width: 80%; max-width: 300px;">
+            <h3 style="color: #E2C8BA;">RoanJane 後台</h3>
+            <input type="password" id="adminPwd" class="input" placeholder="密碼">
+            <button class="btn btn-primary" onclick="login()">登 入</button>
+        </div>
+    </div>
+
+    <div class="container" id="mainContent" style="display:none;">
+        <h2>後台管理系統</h2>
+        
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('marketing', this)">發送優惠券</button>
+            <button class="nav-btn" onclick="switchTab('pos', this)">查詢 / 核銷</button>
+            <button class="nav-btn" onclick="switchTab('stats', this); loadStats()">數據報表</button>
+        </div>
+
+        <!-- 優惠券發送頁面 -->
+        <div id="marketingSection" class="card active">
+            <!-- 快速發送區 (已修正隱藏問題) -->
+            <div class="quick-box">
+                <h3 style="color: #d63031; margin-top: 0;">🧧 快速發送：滿萬送千賀禮</h3>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="tel" id="quick-phone" placeholder="輸入電話 (如: 0912345678)" 
+                           style="flex: 1; padding: 12px; border: 1px solid #ff7675; border-radius: 8px; font-size: 16px;">
+                    <button onclick="quickSendCoupon()" id="quick-send-btn" class="btn-quick">立即發送</button>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    ※ 預設：使用期限至 2026/03/31，低消3000元，圖片已鎖定。
+                </p>
+            </div>
+
+            <h3 style="margin-top:20px; border-top: 1px solid #555; padding-top: 20px;">🎯 其他優惠券派發</h3>
+            <label class="label">發送對象</label>
+            <select id="targetType" class="select" onchange="toggleTarget()">
+                <option value="single">單一會員 (輸入電話)</option>
+                <option value="birthday">本月壽星 (全體)</option>
+                <option value="vip">VIP 會員 (全體)</option>
+                <option value="all">所有會員 (全體)</option>
+            </select>
+
+            <div id="targetValueRow">
+                <label class="label" id="targetLabel">會員電話</label>
+                <input type="text" id="targetValue" class="input" placeholder="例如: 0912345678">
+            </div>
+
+            <label class="label">優惠券名稱</label>
+            <input type="text" id="couponName" class="input" placeholder="例如: 生日禮金$500">
+            <label class="label">到期日 (必填)</label>
+            <input type="date" id="expiryDate" class="input">
+            <label class="label">使用條件 (說明文字)</label>
+            <input type="text" id="couponTerms" class="input" placeholder="例如: 限購新品使用">
+            <label class="label">優惠券圖片 (上傳)</label>
+            <input type="file" id="couponFile" accept="image/*">
+
+            <button class="btn btn-primary" onclick="sendCoupon()">確認發送</button>
+        </div>
+
+        <!-- 查詢核銷頁面 -->
+        <div id="posSection" class="card">
+            <h3 style="margin-top:0;">🛍️ 查詢與核銷</h3>
+            <input type="tel" id="searchPhone" class="input" placeholder="輸入會員電話">
+            <button class="btn btn-primary" onclick="searchMember()">查 詢</button>
+            
+            <div id="memberResult" style="margin-top: 20px; display: none;">
+                <div class="member-info">
+                    <strong id="memName" style="color:#E2C8BA; font-size: 20px;"></strong><br>
+                    電話: <span id="memPhone"></span>
+                </div>
+                <h4 style="margin: 10px 0; border-bottom:1px solid #555; padding-bottom:5px;">持有優惠券</h4>
+                <div id="couponList"></div>
+            </div>
+        </div>
+
+        <!-- 報表頁面 -->
+        <div id="statsSection" class="card">
+            <h3 style="margin-top:0; display:flex; justify-content:space-between;">
+                📊 使用率分析
+                <button onclick="loadStats()" style="background:none; border:none; color:#E2C8BA; font-size:14px; cursor:pointer;">↻ 更新</button>
+            </h3>
+            <div id="statsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 設定 API 網址
+        const API_URL = "https://script.google.com/macros/s/AKfycbzyty-mdu2mU-AD-KKwoQf-sD2soyjxbcoOW25ViFu38vlTwDY-p0NTomic5RRcqkqT/exec";
+        let PASSWORD = "";
+
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+        // 登入功能
+        function login() {
+            var pwd = document.getElementById('adminPwd').value;
+            if(!pwd) return Swal.fire('錯誤', '請輸入密碼', 'error');
+            
+            showLoading();
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verify_admin', password: pwd })
+            })
+            .then(r => r.json())
+            .then(res => {
+                hideLoading();
+                if(res.status === 'success') {
+                    PASSWORD = pwd;
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    let d = new Date(); d.setMonth(d.getMonth() + 1);
+                    document.getElementById('expiryDate').valueAsDate = d;
+                    toggleTarget();
+                } else {
+                    Swal.fire('錯誤', '密碼錯誤', 'error');
+                }
+            });
+        }
+
+        // 快速發送功能 (修正變數名與流程)
+        async function quickSendCoupon() {
+            const phone = document.getElementById('quick-phone').value.trim();
+            if (!phone) return Swal.fire('提醒', '請輸入電話號碼', 'info');
+
+            const btn = document.getElementById('quick-send-btn');
+            btn.disabled = true;
+            btn.innerText = "發送中...";
+
+            const payload = {
+                action: 'give_coupon',
+                password: PASSWORD,
+                targetType: 'single',
+                targetValue: phone,
+                couponName: "滿萬送千賀禮",
+                couponImg: "https://i.postimg.cc/1tFJGj18/Snipaste-2026-01-28-10-05-04.png",
+                expiryDate: "2026/03/31",
+                couponTerms: "低消3000可使用一張"
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    Swal.fire('完成', '✅ 發送成功！顧客已收到優惠券', 'success');
+                    document.getElementById('quick-phone').value = "";
+                } else {
+                    Swal.fire('失敗', result.message, 'error');
+                }
+            } catch (e) {
+                Swal.fire('錯誤', '系統連線失敗', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "立即發送";
+            }
+        }
+
+        // 查詢會員 (修正 undefined 問題)
+        function searchMember() {
+            var phone = document.getElementById('searchPhone').value;
+            if(!phone) return;
+            showLoading();
+            
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_search', password: PASSWORD, phone: phone }) })
+            .then(r => r.json()).then(res => {
+                hideLoading();
+                if(res.status !== 'success') return Swal.fire('錯誤', res.message, 'error');
+                
+                var d = res.data;
+                // 修正對應後端傳回的欄位
+                document.getElementById('memName').innerText = d.name || "未知名稱";
+                document.getElementById('memPhone').innerText = d.phone || "無電話資料";
+                
+                var list = document.getElementById('couponList');
+                list.innerHTML = "";
+                
+                if(d.coupons && d.coupons.trim() !== "") {
+                    d.coupons.split(',').forEach(c => {
+                        if(c.trim()) {
+                            let parts = c.split('|');
+                            let name = parts[0];
+                            let date = parts[2] ? `(${parts[2]}到期)` : '';
+                            list.innerHTML += `
+                                <div class="coupon-item">
+                                    <span>${name} <small style="color:red">${date}</small></span>
+                                    <button class="btn-danger" onclick="redeem('${phone}', '${c}')">核銷</button>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    list.innerHTML = "<div style='color:#777; text-align:center; padding:10px;'>無可用優惠券</div>";
+                }
+                document.getElementById('memberResult').style.display = 'block';
+            });
+        }
+
+        // 切換分頁
+        function switchTab(id, btn) {
+            document.querySelectorAll('.card').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(id + 'Section').classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // 發送對象切換
+        function toggleTarget() {
+            var type = document.getElementById('targetType').value;
+            var row = document.getElementById('targetValueRow');
+            var label = document.getElementById('targetLabel');
+            var input = document.getElementById('targetValue');
+
+            if (type === 'single') {
+                row.style.display = 'block';
+                label.innerText = '會員電話';
+                input.placeholder = '例如: 0912345678';
+                input.type = 'tel';
+            } else if (type === 'birthday') {
+                row.style.display = 'block';
+                label.innerText = '壽星月份 (1-12)';
+                input.placeholder = '例如: 12';
+                input.type = 'number';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        // 一般優惠券發送
+        function sendCoupon() {
+            var name = document.getElementById('couponName').value;
+            var date = document.getElementById('expiryDate').value;
+            var fileInput = document.getElementById('couponFile');
+            
+            if(!name || !date) return Swal.fire('錯誤', '請填寫名稱與到期日', 'error');
+            
+            var sendData = {
+                action: 'give_coupon', password: PASSWORD,
+                targetType: document.getElementById('targetType').value,
+                targetValue: document.getElementById('targetValue').value,
+                couponName: name,
+                expiryDate: date,
+                couponTerms: document.getElementById('couponTerms').value
+            };
+
+            var processSend = function(payload) {
+                showLoading();
+                fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
+                .then(r => r.json()).then(res => {
+                    hideLoading();
+                    Swal.fire(res.status==='success'?'成功':'失敗', res.message, res.status);
+                });
+            };
+
+            Swal.fire({
+                title: '確認發送?', icon: 'warning',
+                showCancelButton: true, confirmButtonText: '發送'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (fileInput.files.length > 0) {
+                        var reader = new FileReader();
+                        reader.readAsDataURL(fileInput.files[0]);
+                        reader.onload = function () {
+                            sendData.imageBase64 = reader.result; 
+                            processSend(sendData);
+                        };
+                    } else {
+                        processSend(sendData);
+                    }
+                }
+            });
+        }
+
+        // 核銷
+        function redeem(phone, couponData) {
+            Swal.fire({
+                title: '確定核銷?', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#e74c3c', confirmButtonText: '核銷'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading();
+                    fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ action: 'redeem_coupon', password: PASSWORD, phone: phone, couponData: couponData }) 
+                    })
+                    .then(r => r.json()).then(res => {
+                        hideLoading();
+                        Swal.fire('已核銷', res.message, 'success');
+                        searchMember();
+                    });
+                }
+            });
+        }
+
+        // 數據報表
+        function loadStats() {
+            var list = document.getElementById('statsList');
+            list.innerHTML = "<div style='text-align:center; color:#777;'>載入中...</div>";
+
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'get_stats', password: PASSWORD }) })
+            .then(r => r.json()).then(res => {
+                if(res.status !== 'success') return list.innerHTML = "載入失敗";
+                list.innerHTML = "";
+                var stats = res.data;
+                var keys = Object.keys(stats);
+                
+                if(keys.length === 0) {
+                    list.innerHTML = "<div style='text-align:center;'>目前無數據</div>";
+                    return;
+                }
+
+                keys.forEach(key => {
+                    var item = stats[key];
+                    var rate = item.sent > 0 ? Math.round((item.redeemed / item.sent) * 100) : 0;
+                    list.innerHTML += `
+                        <div class="stat-item" style="background:#444; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid #E2C8BA;">
+                            <span style="font-weight:700;">${key}</span>
+                            <div style="display:flex; justify-content:space-between; font-size:14px; margin-top:8px;">
+                                <span>發送: ${item.sent}</span>
+                                <span>核銷: ${item.redeemed}</span>
+                                <span style="color:#E2C8BA;">使用率: ${rate}%</span>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
