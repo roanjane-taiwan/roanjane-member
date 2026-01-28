@@ -28,7 +28,8 @@
         #card-main {
             position: relative; width: 310px; height: 465px; 
             background-image: url('https://i.postimg.cc/CKQCdT57/ni-de-duan-luo-wen-zi-(10).png');
-            background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; 
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            background-color: transparent; 
         }
         #scratch-zone {
             position: absolute; top: 42.5%; left: 10.5%; width: 79%; height: 44.5%;
@@ -41,12 +42,15 @@
         .prize-val { font-size: 72px; font-weight: 900; color: var(--brand-red); line-height: 1; margin: 0; }
         .prize-unit { font-size: 20px; color: var(--brand-red); font-weight: 700; margin-top: 5px; }
         
+        /* 確保畫布在刮完後不擋住按鈕 */
         canvas { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; 
             touch-action: none; cursor: crosshair; 
         }
         
+        /* 加強按鈕權限 z-index: 20 */
         .btn { 
+            position: relative; z-index: 20;
             background: var(--brand-red); color: white; border: none; padding: 16px; 
             font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; 
             width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 5px 0;
@@ -65,7 +69,7 @@
         }
         #loading-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column;
+            background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; color: white; flex-direction: column;
         }
         .screenshot-hint {
             color: var(--brand-red); font-weight: 900; margin-top: 25px; font-size: 18px;
@@ -168,10 +172,12 @@
         document.getElementById('next-btn').style.display = 'none';
         document.getElementById('instruction-text').style.display = 'block';
         document.getElementById('prize-display').style.visibility = 'hidden';
+        
         const canvas = document.getElementById('scratch-canvas');
         canvas.style.opacity = 1;
         canvas.style.display = 'block';
-        
+        canvas.style.pointerEvents = 'auto'; // 恢復點擊
+
         currentPrize = generatePrize();
         document.getElementById('prize-amount').innerText = currentPrize;
         document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
@@ -210,8 +216,7 @@
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
             ctx.arc(x, y, 25, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fill(); // 雙重填充確保實心
+            ctx.fill(); ctx.fill();
             checkClearance(ctx, canvas);
         };
         canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; scratch(e); };
@@ -219,7 +224,6 @@
         canvas.onmousemove = canvas.ontouchmove = scratch;
     }
 
-    // ★ 關鍵優化邏輯：秒開不卡頓 ★
     async function checkClearance(ctx, canvas) {
         if (isProcessingDeduction) return;
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -229,18 +233,15 @@
         if (transparent > (data.length / 4) * 0.5) {
             isProcessingDeduction = true; 
             canvas.onmousedown = canvas.ontouchstart = null;
-            
-            // 1. 立刻執行視覺效果
             canvas.style.opacity = 0;
+            canvas.style.pointerEvents = 'none'; // ★ 重要：讓點擊能穿透到按鈕
             document.getElementById('instruction-text').style.display = 'none';
-            
-            // 2. 本地資料立刻預扣與更新
+
             turnsLeft--; 
             prizesWon.push(currentPrize);
             document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
             updateLiveHistory();
 
-            // 3. 立刻跳出視窗 (不再等待 fetch)
             Swal.fire({
                 title: '恭喜刮中！',
                 html: `<b style="font-size:30px; color:#d63031;">$${currentPrize} 購物金</b>`,
@@ -249,14 +250,17 @@
                 timerProgressBar: true,
                 showConfirmButton: false
             }).then(() => {
+                // ★ 在彈窗完全消失後才切換按鈕
                 canvas.style.display = 'none';
-                if (turnsLeft > 0) document.getElementById('next-btn').style.display = 'block';
-                else showFinalSummary();
+                if (turnsLeft > 0) {
+                    document.getElementById('next-btn').style.display = 'block';
+                } else {
+                    showFinalSummary();
+                }
             });
 
-            // 4. 背景異步執行 API (即使網路慢 3 秒，顧客也已經在看 Swal 了)
             fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'use', phone: userPhone }) })
-            .catch(e => console.error("後台扣點失敗:", e));
+            .catch(e => console.error("API Error:", e));
         }
     }
 
