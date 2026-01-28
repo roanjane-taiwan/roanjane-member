@@ -13,6 +13,7 @@
             background-image: url('https://i.postimg.cc/NMd3K0ms/刮刮樂_(1).png');
             background-repeat: no-repeat; background-position: top center; background-size: 100% auto; 
             background-color: #f6d179; font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
         }
         .header-decor { width: 100%; max-width: 500px; display: block; margin: 0 auto; pointer-events: none; }
         .footer-decor { width: 35%; max-width: 180px; display: block; margin: 10px auto 30px auto; pointer-events: none; }
@@ -47,15 +48,15 @@
             touch-action: none; cursor: crosshair; 
         }
         
-        /* 強力按鈕樣式，確保手機可點擊 */
+        /* 增加按鈕的絕對點擊優先權 */
         .btn { 
-            position: relative; z-index: 999; /* 極高層級 */
+            position: relative; z-index: 9999;
             background: var(--brand-red); color: white; border: none; padding: 16px; 
             font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; 
             width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 10px 0;
-            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
+            touch-action: manipulation;
         }
-        .btn:active { transform: scale(0.98); background: #b32627; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
 
         .count-badge {
             background: rgba(58, 48, 23, 0.9); color: #fff; padding: 10px 25px; 
@@ -71,14 +72,8 @@
         }
         #loading-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; color: white; flex-direction: column;
+            background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; color: white; flex-direction: column;
         }
-        .screenshot-hint {
-            color: var(--brand-red); font-weight: 900; margin-top: 25px; font-size: 18px;
-            width: 100%; text-align: center; display: block; animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.7; } }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -94,7 +89,7 @@
     <div id="login-section" class="login-card">
         <div style="color:var(--brand-red); font-weight:900; font-size:20px; margin-bottom:15px; text-align:center;">🧧 2026 新春刮刮樂</div>
         <input type="tel" id="phone-input" style="width:100%; padding:15px; border:2px solid #eee; border-radius:15px; font-size:22px; font-weight:700; text-align:center; box-sizing:border-box; margin-bottom:15px;" placeholder="輸入手機號碼" maxlength="10">
-        <button class="btn" style="width:100%" onclick="checkAndStart()">確認進入</button>
+        <button class="btn" style="width:100%" id="login-confirm-btn">確認進入</button>
     </div>
 
     <div id="game-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
@@ -108,20 +103,14 @@
             </div>
         </div>
         
-        <!-- 次數顯示 -->
         <div class="count-badge" id="count-text">剩餘次數：-- 次</div>
         
-        <!-- 控制按鈕 -->
-        <button id="next-btn" class="btn" style="display:none;" onclick="prepareNewTurn()">再刮一次</button>
-        <button id="summary-btn" class="btn" style="display:none;" onclick="showFinalSummary()">查看總結果</button>
+        <!-- 手機修復：按鈕改用更強的監聽方式 -->
+        <button id="next-btn" class="btn" style="display:none;">再刮一次</button>
+        <button id="summary-btn" class="btn" style="display:none;">查看總結果</button>
         
         <div id="instruction-text" style="color:white; font-weight:bold; text-shadow:1px 1px 2px #000; margin-top:2px;">動手刮開銀色區域</div>
-        
-        <!-- 紀錄區 -->
-        <div class="history-box" id="live-history-box" style="display:none;">
-            <span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span>
-            <div id="live-history-list" style="font-size:14px; margin-top:10px;"></div>
-        </div>
+        <div class="history-box" id="live-history-box" style="display:none;"><span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span><div id="live-history-list" style="font-size:14px; margin-top:10px;"></div></div>
     </div>
 
     <div id="summary-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
@@ -131,7 +120,7 @@
             <div id="final-total-box" style="border-top:2px dashed #ddd; padding-top:15px; font-size:22px; font-weight:900; text-align:center;">
                 總計：<span id="total-sum" style="color:var(--brand-red); font-size:30px;">0</span> 元
             </div>
-            <div class="screenshot-hint">✨ 記得截圖回傳給專櫃人員 ✨</div>
+            <div style="color: var(--brand-red); font-weight: 900; margin-top: 25px; font-size: 18px; width: 100%; text-align: center; display: block;">✨ 記得截圖回傳給專櫃人員 ✨</div>
         </div>
     </div>
 
@@ -156,6 +145,11 @@
     let currentPrize = 0;
     let isProcessingDeduction = false;
 
+    // 手機版按鈕點擊加強監聽
+    document.getElementById('login-confirm-btn').addEventListener('click', checkAndStart);
+    document.getElementById('next-btn').addEventListener('click', prepareNewTurn);
+    document.getElementById('summary-btn').addEventListener('click', () => showFinalSummary());
+
     async function checkAndStart() {
         const phone = document.getElementById('phone-input').value.trim();
         if (phone.length < 9) return alert("請輸入正確電話");
@@ -172,7 +166,7 @@
                     prepareNewTurn();
                 } else {
                     toggleLoading(false);
-                    Swal.fire({ title: '次數已用完', text: '您目前沒有剩餘抽獎次數囉！', icon: 'info', confirmButtonColor: '#d63031' })
+                    Swal.fire({ title: '次數已用完', text: '您目前沒有抽獎次數囉！', icon: 'info', confirmButtonColor: '#d63031' })
                     .then(() => { document.getElementById('login-section').style.display = 'none'; showFinalSummary(true); });
                 }
             } else { toggleLoading(false); Swal.fire('提示', data.msg || '查無手機號碼', 'info'); }
@@ -186,14 +180,12 @@
         document.getElementById('instruction-text').style.display = 'block';
         document.getElementById('prize-display').style.visibility = 'hidden';
         
-        // 恢復卡片與畫布的可點擊性
+        // 恢復卡片與畫布
         const card = document.getElementById('card-main');
         const canvas = document.getElementById('scratch-canvas');
-        card.style.pointerEvents = 'auto';
+        card.style.display = 'block';
         canvas.style.display = 'block';
         canvas.style.opacity = 1;
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '10';
 
         currentPrize = generatePrize();
         document.getElementById('prize-amount').innerText = currentPrize;
@@ -248,11 +240,9 @@
         if (transparent > (data.length / 4) * 0.5) {
             isProcessingDeduction = true; 
             
-            // ★ 手機修復核心 1：立刻讓畫布不再阻擋點擊
-            canvas.style.pointerEvents = 'none';
-            canvas.style.zIndex = '-1';
-            canvas.style.opacity = 0;
-            document.getElementById('card-main').style.pointerEvents = 'none';
+            // ★ 修復核心：立刻關閉畫布點擊，並立刻從視覺上移除障礙
+            canvas.style.display = 'none';
+            document.getElementById('card-main').style.display = 'none';
             document.getElementById('instruction-text').style.display = 'none';
 
             turnsLeft--; 
@@ -267,12 +257,9 @@
                 timer: 2000,
                 timerProgressBar: true,
                 showConfirmButton: false,
-                allowOutsideClick: false // 防止點擊外部沒關閉
+                allowOutsideClick: false
             }).then(() => {
-                // ★ 手機修復核心 2：徹底移除畫布顯示
-                canvas.style.display = 'none';
-                
-                // ★ 手機修復核心 3：強制 Body 清除 Swal 殘留
+                // 強制重整手機版 Body 狀態
                 document.body.classList.remove('swal2-shown', 'swal2-height-auto');
 
                 if (turnsLeft > 0) {
@@ -318,6 +305,7 @@
         }
     }
     function toggleLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </script>
 </body>
 </html>
