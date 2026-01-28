@@ -42,19 +42,21 @@
         .prize-val { font-size: 72px; font-weight: 900; color: var(--brand-red); line-height: 1; margin: 0; }
         .prize-unit { font-size: 20px; color: var(--brand-red); font-weight: 700; margin-top: 5px; }
         
-        /* 確保畫布在刮完後不擋住按鈕 */
         canvas { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; 
             touch-action: none; cursor: crosshair; 
         }
         
-        /* 加強按鈕權限 z-index: 20 */
+        /* 強力按鈕樣式，確保手機可點擊 */
         .btn { 
-            position: relative; z-index: 20;
+            position: relative; z-index: 999; /* 極高層級 */
             background: var(--brand-red); color: white; border: none; padding: 16px; 
             font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; 
-            width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 5px 0;
+            width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 10px 0;
+            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
         }
+        .btn:active { transform: scale(0.98); background: #b32627; }
+
         .count-badge {
             background: rgba(58, 48, 23, 0.9); color: #fff; padding: 10px 25px; 
             border-radius: 50px; font-size: 15px; font-weight: 700; margin: 10px 0;
@@ -105,11 +107,21 @@
                 <canvas id="scratch-canvas"></canvas>
             </div>
         </div>
+        
+        <!-- 次數顯示 -->
         <div class="count-badge" id="count-text">剩餘次數：-- 次</div>
+        
+        <!-- 控制按鈕 -->
         <button id="next-btn" class="btn" style="display:none;" onclick="prepareNewTurn()">再刮一次</button>
         <button id="summary-btn" class="btn" style="display:none;" onclick="showFinalSummary()">查看總結果</button>
+        
         <div id="instruction-text" style="color:white; font-weight:bold; text-shadow:1px 1px 2px #000; margin-top:2px;">動手刮開銀色區域</div>
-        <div class="history-box" id="live-history-box" style="display:none;"><span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span><div id="live-history-list" style="font-size:14px; margin-top:10px;"></div></div>
+        
+        <!-- 紀錄區 -->
+        <div class="history-box" id="live-history-box" style="display:none;">
+            <span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span>
+            <div id="live-history-list" style="font-size:14px; margin-top:10px;"></div>
+        </div>
     </div>
 
     <div id="summary-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
@@ -170,13 +182,18 @@
     function prepareNewTurn() {
         isProcessingDeduction = false;
         document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('summary-btn').style.display = 'none';
         document.getElementById('instruction-text').style.display = 'block';
         document.getElementById('prize-display').style.visibility = 'hidden';
         
+        // 恢復卡片與畫布的可點擊性
+        const card = document.getElementById('card-main');
         const canvas = document.getElementById('scratch-canvas');
-        canvas.style.opacity = 1;
+        card.style.pointerEvents = 'auto';
         canvas.style.display = 'block';
-        canvas.style.pointerEvents = 'auto'; // 恢復點擊
+        canvas.style.opacity = 1;
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.zIndex = '10';
 
         currentPrize = generatePrize();
         document.getElementById('prize-amount').innerText = currentPrize;
@@ -195,12 +212,10 @@
         const ctx = canvas.getContext('2d');
         canvas.width = zone.offsetWidth;
         canvas.height = zone.offsetHeight;
-
         ctx.imageSmoothingEnabled = false; 
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#c0c0c0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         document.getElementById('prize-display').style.visibility = 'visible';
         toggleLoading(false);
         enableScratching(ctx, canvas);
@@ -232,9 +247,12 @@
         
         if (transparent > (data.length / 4) * 0.5) {
             isProcessingDeduction = true; 
-            canvas.onmousedown = canvas.ontouchstart = null;
+            
+            // ★ 手機修復核心 1：立刻讓畫布不再阻擋點擊
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '-1';
             canvas.style.opacity = 0;
-            canvas.style.pointerEvents = 'none'; // ★ 重要：讓點擊能穿透到按鈕
+            document.getElementById('card-main').style.pointerEvents = 'none';
             document.getElementById('instruction-text').style.display = 'none';
 
             turnsLeft--; 
@@ -248,10 +266,15 @@
                 icon: 'success',
                 timer: 2000,
                 timerProgressBar: true,
-                showConfirmButton: false
+                showConfirmButton: false,
+                allowOutsideClick: false // 防止點擊外部沒關閉
             }).then(() => {
-                // ★ 在彈窗完全消失後才切換按鈕
+                // ★ 手機修復核心 2：徹底移除畫布顯示
                 canvas.style.display = 'none';
+                
+                // ★ 手機修復核心 3：強制 Body 清除 Swal 殘留
+                document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+
                 if (turnsLeft > 0) {
                     document.getElementById('next-btn').style.display = 'block';
                 } else {
@@ -260,14 +283,14 @@
             });
 
             fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'use', phone: userPhone }) })
-            .catch(e => console.error("API Error:", e));
+            .catch(e => console.error(e));
         }
     }
 
     function updateLiveHistory() {
         const box = document.getElementById('live-history-box');
         const list = document.getElementById('live-history-list');
-        box.style.display = prizesWon.length > 0 ? 'block' : 'none';
+        box.style.display = 'block';
         list.innerHTML = "";
         prizesWon.slice().reverse().forEach((p, i) => {
             const num = prizesWon.length - i;
