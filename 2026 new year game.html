@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoanJane 2026 新春刮刮樂</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --brand-red: #d63031; --gold: #f1c40f; }
+        body { 
+            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            background-image: url('https://i.postimg.cc/NMd3K0ms/刮刮樂_(1).png');
+            background-repeat: no-repeat; background-position: top center; background-size: 100% auto; 
+            background-color: #f6d179; font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden;
+        }
+        .header-decor { width: 100%; max-width: 500px; display: block; margin: 0 auto; pointer-events: none; }
+        .footer-decor { width: 35%; max-width: 180px; display: block; margin: 10px auto 30px auto; pointer-events: none; }
+        
+        .container { 
+            width: 100%; max-width: 500px; padding: 0 15px; box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center; flex-grow: 1; margin-top: -35px; 
+        }
+        .login-card { 
+            background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 4px solid var(--gold); width: 90%; box-sizing: border-box;
+        }
+        #card-main {
+            position: relative; width: 310px; height: 465px; 
+            background-image: url('https://i.postimg.cc/CKQCdT57/ni-de-duan-luo-wen-zi-(10).png');
+            background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; 
+        }
+        #scratch-zone {
+            position: absolute; top: 42.5%; left: 10.5%; width: 79%; height: 44.5%;
+            background: #ffffff; border-radius: 10px; overflow: hidden;
+        }
+        #prize-display {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1; visibility: hidden;
+        }
+        .prize-val { font-size: 72px; font-weight: 900; color: var(--brand-red); line-height: 1; margin: 0; }
+        .prize-unit { font-size: 20px; color: var(--brand-red); font-weight: 700; margin-top: 5px; }
+        
+        canvas { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
+            touch-action: none; cursor: crosshair; 
+        }
+        
+        .btn { 
+            background: var(--brand-red); color: white; border: none; padding: 16px; 
+            font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; 
+            width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 5px 0;
+        }
+        .count-badge {
+            background: rgba(58, 48, 23, 0.9); color: #fff; padding: 10px 25px; 
+            border-radius: 50px; font-size: 15px; font-weight: 700; margin: 10px 0;
+        }
+        .history-box {
+            width: 90%; background: rgba(255, 255, 255, 0.85); border-radius: 20px; 
+            padding: 15px; margin: 15px 0; box-sizing: border-box; border: 2px solid var(--gold);
+        }
+        .rules {
+            width: 90%; margin: 15px 0; text-align: left; background: rgba(255, 255, 255, 0.7);
+            padding: 20px; border-radius: 20px; font-size: 13px; line-height: 1.8; color: #444; box-sizing: border-box;
+        }
+        #loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column;
+        }
+        .screenshot-hint {
+            color: var(--brand-red); font-weight: 900; margin-top: 25px; font-size: 18px;
+            width: 100%; text-align: center; display: block; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.7; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<img src="https://i.postimg.cc/0QVTzND5/刮刮樂_(1024_x_2000_像素).png" class="header-decor">
+
+<div id="loading-overlay">
+    <div style="border:4px solid rgba(255,255,255,0.2); border-top:4px solid #f1c40f; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
+    <div id="loading-text" style="margin-top:15px; font-weight:bold;">連線中...</div>
+</div>
+
+<div class="container">
+    <div id="login-section" class="login-card">
+        <div style="color:var(--brand-red); font-weight:900; font-size:20px; margin-bottom:15px; text-align:center;">🧧 2026 新春刮刮樂</div>
+        <input type="tel" id="phone-input" style="width:100%; padding:15px; border:2px solid #eee; border-radius:15px; font-size:22px; font-weight:700; text-align:center; box-sizing:border-box; margin-bottom:15px;" placeholder="輸入手機號碼" maxlength="10">
+        <button class="btn" style="width:100%" onclick="checkAndStart()">確認進入</button>
+    </div>
+
+    <div id="game-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
+        <div id="card-main">
+            <div id="scratch-zone">
+                <div id="prize-display">
+                    <span class="prize-val" id="prize-amount">0</span>
+                    <span class="prize-unit">購物金</span>
+                </div>
+                <canvas id="scratch-canvas"></canvas>
+            </div>
+        </div>
+        <div class="count-badge" id="count-text">剩餘次數：-- 次</div>
+        <button id="next-btn" class="btn" style="display:none;" onclick="prepareNewTurn()">再刮一次</button>
+        <button id="summary-btn" class="btn" style="display:none;" onclick="showFinalSummary()">查看總結果</button>
+        <div id="instruction-text" style="color:white; font-weight:bold; text-shadow:1px 1px 2px #000; margin-top:2px;">動手刮開銀色區域</div>
+        <div class="history-box" id="live-history-box" style="display:none;"><span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span><div id="live-history-list" style="font-size:14px; margin-top:10px;"></div></div>
+    </div>
+
+    <div id="summary-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
+        <div class="login-card">
+            <h2 style="color:var(--brand-red); margin-top:0; text-align:center;">🏮 抽獎結算</h2>
+            <div id="summary-list-content"></div>
+            <div id="final-total-box" style="border-top:2px dashed #ddd; padding-top:15px; font-size:22px; font-weight:900; text-align:center;">
+                總計：<span id="total-sum" style="color:var(--brand-red); font-size:30px;">0</span> 元
+            </div>
+            <div class="screenshot-hint">✨ 記得截圖回傳給專櫃人員 ✨</div>
+        </div>
+    </div>
+
+    <div class="rules">
+        <strong style="font-size:15px; color:#c0392b;">遊戲規則：</strong><br>
+        1. 本活動於2026/01/29(四)至2026/03/01(日)止，僅限SOGO專櫃使用。<br>
+        2. 單筆消費活動折扣後滿$5000可刮一次。<br>
+        3. 獲得的獎項於當次結帳金額現折。<br>
+        4. 每筆限用乙張，恕不找零、不兌現，遺失或影印無效。<br>
+        5. 使用優惠券時，請向店員出示此畫面。<br>
+        6. 本公司保留活動變更及最終解釋權。
+    </div>
+</div>
+
+<img src="https://i.postimg.cc/zBxsyfKX/刮刮樂_(1024_x_2000_像素)_(1).png" class="footer-decor">
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzyty-mdu2mU-AD-KKwoQf-sD2soyjxbcoOW25ViFu38vlTwDY-p0NTomic5RRcqkqT/exec";
+    let userPhone = "";
+    let turnsLeft = 0;
+    let prizesWon = [];
+    let currentPrize = 0;
+    let isProcessingDeduction = false;
+
+    async function checkAndStart() {
+        const phone = document.getElementById('phone-input').value.trim();
+        if (phone.length < 9) return alert("請輸入正確電話");
+        userPhone = phone;
+        toggleLoading(true);
+        try {
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'check', phone: userPhone }) });
+            const data = await res.json();
+            if (data.success) {
+                turnsLeft = data.count;
+                if (turnsLeft > 0) {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('game-area').style.display = 'flex';
+                    prepareNewTurn();
+                } else {
+                    toggleLoading(false);
+                    Swal.fire({ title: '次數已用完', text: '您目前沒有剩餘抽獎次數囉！', icon: 'info', confirmButtonColor: '#d63031' })
+                    .then(() => { document.getElementById('login-section').style.display = 'none'; showFinalSummary(true); });
+                }
+            } else { toggleLoading(false); Swal.fire('提示', data.msg || '查無手機號碼', 'info'); }
+        } catch (e) { toggleLoading(false); alert("網路錯誤"); }
+    }
+
+    function prepareNewTurn() {
+        isProcessingDeduction = false;
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('instruction-text').style.display = 'block';
+        document.getElementById('prize-display').style.visibility = 'hidden';
+        const canvas = document.getElementById('scratch-canvas');
+        canvas.style.opacity = 1;
+        canvas.style.display = 'block';
+        
+        currentPrize = generatePrize();
+        document.getElementById('prize-amount').innerText = currentPrize;
+        document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
+        setupScratchCard();
+    }
+
+    function generatePrize() {
+        const r = Math.random() * 100;
+        if (r < 60) return 188; if (r < 85) return 288; if (r < 95) return 388; return 688;
+    }
+
+    function setupScratchCard() {
+        const canvas = document.getElementById('scratch-canvas');
+        const zone = document.getElementById('scratch-zone');
+        const ctx = canvas.getContext('2d');
+        canvas.width = zone.offsetWidth;
+        canvas.height = zone.offsetHeight;
+
+        ctx.imageSmoothingEnabled = false; 
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#c0c0c0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        document.getElementById('prize-display').style.visibility = 'visible';
+        toggleLoading(false);
+        enableScratching(ctx, canvas);
+    }
+
+    function enableScratching(ctx, canvas) {
+        let isDrawing = false;
+        const scratch = (e) => {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fill(); // 雙重填充確保實心
+            checkClearance(ctx, canvas);
+        };
+        canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; scratch(e); };
+        window.onmouseup = window.ontouchend = () => isDrawing = false;
+        canvas.onmousemove = canvas.ontouchmove = scratch;
+    }
+
+    // ★ 關鍵優化邏輯：秒開不卡頓 ★
+    async function checkClearance(ctx, canvas) {
+        if (isProcessingDeduction) return;
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let transparent = 0;
+        for (let i = 3; i < data.length; i += 4) { if (data[i] < 255) transparent++; }
+        
+        if (transparent > (data.length / 4) * 0.5) {
+            isProcessingDeduction = true; 
+            canvas.onmousedown = canvas.ontouchstart = null;
+            
+            // 1. 立刻執行視覺效果
+            canvas.style.opacity = 0;
+            document.getElementById('instruction-text').style.display = 'none';
+            
+            // 2. 本地資料立刻預扣與更新
+            turnsLeft--; 
+            prizesWon.push(currentPrize);
+            document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
+            updateLiveHistory();
+
+            // 3. 立刻跳出視窗 (不再等待 fetch)
+            Swal.fire({
+                title: '恭喜刮中！',
+                html: `<b style="font-size:30px; color:#d63031;">$${currentPrize} 購物金</b>`,
+                icon: 'success',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
+                canvas.style.display = 'none';
+                if (turnsLeft > 0) document.getElementById('next-btn').style.display = 'block';
+                else showFinalSummary();
+            });
+
+            // 4. 背景異步執行 API (即使網路慢 3 秒，顧客也已經在看 Swal 了)
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'use', phone: userPhone }) })
+            .catch(e => console.error("後台扣點失敗:", e));
+        }
+    }
+
+    function updateLiveHistory() {
+        const box = document.getElementById('live-history-box');
+        const list = document.getElementById('live-history-list');
+        box.style.display = prizesWon.length > 0 ? 'block' : 'none';
+        list.innerHTML = "";
+        prizesWon.slice().reverse().forEach((p, i) => {
+            const num = prizesWon.length - i;
+            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #ccc;"><span>第 ${num} 抽：</span><span style="font-weight:bold; color:var(--brand-red);">$${p}</span></div>`;
+        });
+    }
+
+    function showFinalSummary(noHistory = false) {
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('summary-area').style.display = 'flex';
+        const content = document.getElementById('summary-list-content');
+        const totalBox = document.getElementById('final-total-box');
+        content.innerHTML = "";
+        if (noHistory && prizesWon.length === 0) {
+            content.innerHTML = `<div style="text-align:center; padding:20px; color:#666; font-weight:bold;">您的遊戲次數已用完囉！</div>`;
+            totalBox.style.display = "none";
+        } else {
+            let total = 0;
+            prizesWon.forEach((p, index) => {
+                total += p;
+                content.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; font-weight:700;"><span>第 ${index + 1} 抽</span><span style="color:var(--brand-red);">$${p}</span></div>`;
+            });
+            document.getElementById('total-sum').innerText = total.toLocaleString();
+            totalBox.style.display = "block";
+        }
+    }
+    function toggleLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
+</script>
+</body>
+</html>
