@@ -13,14 +13,14 @@
             background-image: url('https://i.postimg.cc/NMd3K0ms/刮刮樂_(1).png');
             background-repeat: no-repeat; background-position: top center; background-size: 100% auto; 
             background-color: #f6d179; font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden;
-            -webkit-text-size-adjust: 100%;
+            touch-action: manipulation;
         }
         .header-decor { width: 100%; max-width: 500px; display: block; margin: 0 auto; pointer-events: none; }
         .footer-decor { width: 35%; max-width: 180px; display: block; margin: 10px auto 30px auto; pointer-events: none; }
         
         .container { 
             width: 100%; max-width: 500px; padding: 0 15px; box-sizing: border-box;
-            display: flex; flex-direction: column; align-items: center; flex-grow: 1; margin-top: -35px; 
+            display: flex; flex-direction: column; align-items: center; flex-grow: 1; margin-top: -55px; 
         }
         .login-card { 
             background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 25px; 
@@ -30,7 +30,7 @@
             position: relative; width: 310px; height: 465px; 
             background-image: url('https://i.postimg.cc/CKQCdT57/ni-de-duan-luo-wen-zi-(10).png');
             background-size: contain; background-repeat: no-repeat; background-position: center;
-            background-color: transparent; 
+            background-color: transparent; margin-bottom: 5px;
         }
         #scratch-zone {
             position: absolute; top: 42.5%; left: 10.5%; width: 79%; height: 44.5%;
@@ -43,20 +43,13 @@
         .prize-val { font-size: 72px; font-weight: 900; color: var(--brand-red); line-height: 1; margin: 0; }
         .prize-unit { font-size: 20px; color: var(--brand-red); font-weight: 700; margin-top: 5px; }
         
-        canvas { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; 
-            touch-action: none; cursor: crosshair; 
-        }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; cursor: crosshair; }
         
-        /* 增加按鈕的絕對點擊優先權 */
         .btn { 
-            position: relative; z-index: 9999;
             background: var(--brand-red); color: white; border: none; padding: 16px; 
             font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; 
             width: 85%; box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3); margin: 10px 0;
-            touch-action: manipulation;
         }
-        .btn:active { opacity: 0.8; transform: scale(0.98); }
 
         .count-badge {
             background: rgba(58, 48, 23, 0.9); color: #fff; padding: 10px 25px; 
@@ -86,12 +79,14 @@
 </div>
 
 <div class="container">
+    <!-- 1. 登入頁 -->
     <div id="login-section" class="login-card">
         <div style="color:var(--brand-red); font-weight:900; font-size:20px; margin-bottom:15px; text-align:center;">🧧 2026 新春刮刮樂</div>
         <input type="tel" id="phone-input" style="width:100%; padding:15px; border:2px solid #eee; border-radius:15px; font-size:22px; font-weight:700; text-align:center; box-sizing:border-box; margin-bottom:15px;" placeholder="輸入手機號碼" maxlength="10">
-        <button class="btn" style="width:100%" id="login-confirm-btn">確認進入</button>
+        <button class="btn" style="width:100%" onclick="checkAndStart()">確認進入</button>
     </div>
 
+    <!-- 2. 遊戲頁 -->
     <div id="game-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
         <div id="card-main">
             <div id="scratch-zone">
@@ -104,15 +99,15 @@
         </div>
         
         <div class="count-badge" id="count-text">剩餘次數：-- 次</div>
-        
-        <!-- 手機修復：按鈕改用更強的監聽方式 -->
-        <button id="next-btn" class="btn" style="display:none;">再刮一次</button>
-        <button id="summary-btn" class="btn" style="display:none;">查看總結果</button>
-        
         <div id="instruction-text" style="color:white; font-weight:bold; text-shadow:1px 1px 2px #000; margin-top:2px;">動手刮開銀色區域</div>
-        <div class="history-box" id="live-history-box" style="display:none;"><span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span><div id="live-history-list" style="font-size:14px; margin-top:10px;"></div></div>
+        
+        <div class="history-box" id="live-history-box" style="display:none;">
+            <span style="font-weight:900; color:var(--brand-red); border-bottom:1px solid #ddd; display:block; padding-bottom:5px;">📜 本次中獎紀錄</span>
+            <div id="live-history-list" style="font-size:14px; margin-top:10px;"></div>
+        </div>
     </div>
 
+    <!-- 3. 結算頁 -->
     <div id="summary-area" style="display:none; width:100%; flex-direction: column; align-items: center;">
         <div class="login-card">
             <h2 style="color:var(--brand-red); margin-top:0; text-align:center;">🏮 抽獎結算</h2>
@@ -122,6 +117,7 @@
             </div>
             <div style="color: var(--brand-red); font-weight: 900; margin-top: 25px; font-size: 18px; width: 100%; text-align: center; display: block;">✨ 記得截圖回傳給專櫃人員 ✨</div>
         </div>
+        <button class="btn" onclick="location.reload()" style="background:#5d4037; margin-top:20px;">返回首頁</button>
     </div>
 
     <div class="rules">
@@ -143,12 +139,7 @@
     let turnsLeft = 0;
     let prizesWon = [];
     let currentPrize = 0;
-    let isProcessingDeduction = false;
-
-    // 手機版按鈕點擊加強監聽
-    document.getElementById('login-confirm-btn').addEventListener('click', checkAndStart);
-    document.getElementById('next-btn').addEventListener('click', prepareNewTurn);
-    document.getElementById('summary-btn').addEventListener('click', () => showFinalSummary());
+    let isProcessing = false;
 
     async function checkAndStart() {
         const phone = document.getElementById('phone-input').value.trim();
@@ -166,7 +157,7 @@
                     prepareNewTurn();
                 } else {
                     toggleLoading(false);
-                    Swal.fire({ title: '次數已用完', text: '您目前沒有抽獎次數囉！', icon: 'info', confirmButtonColor: '#d63031' })
+                    Swal.fire({ title: '次數已用完', text: '您目前沒有抽獎次數囉！', icon: 'info', confirmButtonColor: '#d63031', confirmButtonText: '查看紀錄' })
                     .then(() => { document.getElementById('login-section').style.display = 'none'; showFinalSummary(true); });
                 }
             } else { toggleLoading(false); Swal.fire('提示', data.msg || '查無手機號碼', 'info'); }
@@ -174,19 +165,13 @@
     }
 
     function prepareNewTurn() {
-        isProcessingDeduction = false;
-        document.getElementById('next-btn').style.display = 'none';
-        document.getElementById('summary-btn').style.display = 'none';
+        isProcessing = false;
         document.getElementById('instruction-text').style.display = 'block';
         document.getElementById('prize-display').style.visibility = 'hidden';
-        
-        // 恢復卡片與畫布
-        const card = document.getElementById('card-main');
         const canvas = document.getElementById('scratch-canvas');
-        card.style.display = 'block';
         canvas.style.display = 'block';
         canvas.style.opacity = 1;
-
+        
         currentPrize = generatePrize();
         document.getElementById('prize-amount').innerText = currentPrize;
         document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
@@ -205,7 +190,6 @@
         canvas.width = zone.offsetWidth;
         canvas.height = zone.offsetHeight;
         ctx.imageSmoothingEnabled = false; 
-        ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#c0c0c0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         document.getElementById('prize-display').style.visibility = 'visible';
@@ -232,45 +216,41 @@
     }
 
     async function checkClearance(ctx, canvas) {
-        if (isProcessingDeduction) return;
+        if (isProcessing) return;
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
         for (let i = 3; i < data.length; i += 4) { if (data[i] < 255) transparent++; }
         
-        if (transparent > (data.length / 4) * 0.5) {
-            isProcessingDeduction = true; 
-            
-            // ★ 修復核心：立刻關閉畫布點擊，並立刻從視覺上移除障礙
-            canvas.style.display = 'none';
-            document.getElementById('card-main').style.display = 'none';
-            document.getElementById('instruction-text').style.display = 'none';
+        if (transparent > (data.length / 4) * 0.25) {
+            isProcessing = true;
+            canvas.style.display = 'none'; // 物理移除畫布
 
             turnsLeft--; 
             prizesWon.push(currentPrize);
             document.getElementById('count-text').innerText = `剩餘遊戲次數：${turnsLeft} 次`;
             updateLiveHistory();
 
+            // ★ 手機修復核心：改用彈窗按鈕來驅動下一步，避開頁面點擊失效問題 ★
             Swal.fire({
                 title: '恭喜刮中！',
                 html: `<b style="font-size:30px; color:#d63031;">$${currentPrize} 購物金</b>`,
                 icon: 'success',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                allowOutsideClick: false
-            }).then(() => {
-                // 強制重整手機版 Body 狀態
-                document.body.classList.remove('swal2-shown', 'swal2-height-auto');
-
-                if (turnsLeft > 0) {
-                    document.getElementById('next-btn').style.display = 'block';
-                } else {
-                    showFinalSummary();
+                confirmButtonColor: '#d63031',
+                confirmButtonText: turnsLeft > 0 ? '再刮一次' : '查看總結果',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (turnsLeft > 0) {
+                        prepareNewTurn();
+                    } else {
+                        showFinalSummary();
+                    }
                 }
             });
 
-            fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'use', phone: userPhone }) })
-            .catch(e => console.error(e));
+            // 背景傳輸
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ target: '2026game', action: 'use', phone: userPhone }) });
         }
     }
 
@@ -285,24 +265,17 @@
         });
     }
 
-    function showFinalSummary(noHistory = false) {
+    function showFinalSummary() {
         document.getElementById('game-area').style.display = 'none';
         document.getElementById('summary-area').style.display = 'flex';
         const content = document.getElementById('summary-list-content');
-        const totalBox = document.getElementById('final-total-box');
         content.innerHTML = "";
-        if (noHistory && prizesWon.length === 0) {
-            content.innerHTML = `<div style="text-align:center; padding:20px; color:#666; font-weight:bold;">您的遊戲次數已用完囉！</div>`;
-            totalBox.style.display = "none";
-        } else {
-            let total = 0;
-            prizesWon.forEach((p, index) => {
-                total += p;
-                content.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; font-weight:700;"><span>第 ${index + 1} 抽</span><span style="color:var(--brand-red);">$${p}</span></div>`;
-            });
-            document.getElementById('total-sum').innerText = total.toLocaleString();
-            totalBox.style.display = "block";
-        }
+        let total = 0;
+        prizesWon.forEach((p, index) => {
+            total += p;
+            content.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; font-weight:700;"><span>第 ${index + 1} 抽</span><span style="color:var(--brand-red);">$${p}</span></div>`;
+        });
+        document.getElementById('total-sum').innerText = total.toLocaleString();
     }
     function toggleLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
