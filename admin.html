@@ -210,7 +210,44 @@
             <div style="display:flex; gap:15px; margin-top:20px;"><input type="tel" id="searchPhone" style="flex:1; padding:15px; border-radius:12px; border:1px solid #ddd;" placeholder="會員電話"><button class="btn btn-primary" onclick="searchMember()">查詢</button></div>
             <div id="memberResult" style="display:none; margin-top:30px;"><h3 id="memName"></h3><div id="couponList"></div></div>
         </div>
-        <div id="marketingSection" class="card"><h2>優惠券派發</h2></div>
+        <div id="marketingSection" class="card" style="display:none;">
+            <div class="page-header" style="margin-bottom: 20px;">
+                <h2>🎟️ 優惠券派發中心</h2>
+                <p style="font-size: 13px; opacity: 0.6;">設定並派發專屬優惠券給指定會員</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 600px; background: var(--brand-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--brand-surface);">
+                <div>
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">優惠券名稱 <span style="color:red;">*</span></label>
+                    <input type="text" id="cpnName" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px;" placeholder="例如：春季新品 9 折券">
+                </div>
+                <div>
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">優惠券圖片網址 (選填)</label>
+                    <input type="text" id="cpnImg" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px;" placeholder="輸入圖片 URL...">
+                </div>
+                <div>
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">使用期限 <span style="color:red;">*</span></label>
+                    <input type="date" id="cpnExp" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">使用條款 / 備註</label>
+                    <textarea id="cpnTerms" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px; height: 80px;" placeholder="例如：滿千折百，不可與其他優惠併用"></textarea>
+                </div>
+                <div>
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">發送對象 <span style="color:red;">*</span></label>
+                    <select id="cpnTargetType" onchange="togglePhoneInput()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px; background: white;">
+                        <option value="single">單一會員 (輸入電話)</option>
+                        <option value="vip">所有 VIP 核心會員</option>
+                        <option value="all">全體會員</option>
+                    </select>
+                </div>
+                <div id="phoneInputBox">
+                    <label style="font-weight: bold; font-size: 14px; color: var(--brand-primary-dark);">目標會員電話 <span style="color:red;">*</span></label>
+                    <input type="tel" id="cpnTargetVal" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px;" placeholder="請輸入欲發送的會員電話">
+                </div>
+                <button class="btn btn-primary" onclick="sendCoupon()" style="margin-top: 15px; width: 100%;"><i data-lucide="send"></i> 確認發送</button>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -519,6 +556,69 @@
             fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_search', password: PASSWORD, phone: phone }) })
             .then(r => r.json()).then(res => { hideLoading(); if(res.status !== 'success') return Swal.fire('查無資料', res.message, 'error');
                 document.getElementById('memName').innerText = res.data.name; document.getElementById('memberResult').style.display = 'block'; });
+        }
+        // === 優惠券派發邏輯 ===
+        function togglePhoneInput() {
+            const type = document.getElementById('cpnTargetType').value;
+            document.getElementById('phoneInputBox').style.display = (type === 'single') ? 'block' : 'none';
+        }
+
+        async function sendCoupon() {
+            const name = document.getElementById('cpnName').value.trim();
+            const img = document.getElementById('cpnImg').value.trim();
+            const exp = document.getElementById('cpnExp').value;
+            const terms = document.getElementById('cpnTerms').value.trim();
+            const type = document.getElementById('cpnTargetType').value;
+            const val = document.getElementById('cpnTargetVal').value.trim();
+
+            if (!name || !exp) return Swal.fire('錯誤', '請填寫優惠券名稱與使用期限！', 'error');
+            if (type === 'single' && !val) return Swal.fire('錯誤', '選擇單一發送時，請填寫目標會員電話！', 'error');
+
+            const confirmStr = type === 'all' ? '「全體會員」' : (type === 'vip' ? '「所有 VIP」' : `「${val}」`);
+            const result = await Swal.fire({
+                title: '確認發送?',
+                text: `確定要將「${name}」發送給 ${confirmStr} 嗎？此操作不可逆！`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '確定發送',
+                cancelButtonText: '取消'
+            });
+
+            if (result.isConfirmed) {
+                showLoading("發送優惠券中...");
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'give_coupon',
+                            password: PASSWORD,
+                            couponName: name,
+                            couponImg: img,
+                            expiryDate: exp,
+                            couponTerms: terms,
+                            targetType: type,
+                            targetValue: val
+                        })
+                    });
+                    const res = await response.json();
+                    hideLoading();
+                    
+                    if (res.status === 'success') {
+                        Swal.fire('發送成功！', res.message, 'success');
+                        // 清空表單
+                        document.getElementById('cpnName').value = '';
+                        document.getElementById('cpnImg').value = '';
+                        document.getElementById('cpnExp').value = '';
+                        document.getElementById('cpnTerms').value = '';
+                        document.getElementById('cpnTargetVal').value = '';
+                    } else {
+                        Swal.fire('發送失敗', res.message, 'error');
+                    }
+                } catch (e) {
+                    hideLoading();
+                    Swal.fire('錯誤', '連線失敗，請檢查網路狀態', 'error');
+                }
+            }
         }
     </script>
 </body>
