@@ -45,8 +45,9 @@
         .chart-title { font-size: 16px; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         
         .top-products-table { width: 100%; text-align: left; font-size: 14px; border-collapse: collapse; }
-        .top-products-table th { padding: 12px 15px; border-bottom: 2px solid var(--brand-surface); color: var(--brand-primary-dark); }
-        .top-products-table td { padding: 12px 15px; border-bottom: 1px solid var(--brand-surface); word-break: break-word; line-height: 1.4; }
+        .top-products-table th { padding: 18px 20px; border-bottom: 2px solid var(--brand-surface); color: var(--brand-primary-dark); font-size: 13px; letter-spacing: 0.05em; }
+        .top-products-table td { padding: 18px 20px; border-bottom: 1px solid var(--brand-surface); word-break: break-word; vertical-align: middle; }
+        .top-products-table tr:hover td { background: #faf8f5; transition: 0.2s; } /* 滑鼠移過去會有淺淺的底色 */
         .rank-badge { display: inline-block; width: 24px; height: 24px; background: var(--brand-surface); color: var(--brand-brown); text-align: center; line-height: 24px; border-radius: 50%; font-weight: bold; font-size: 12px; }
         .rank-badge.top-1 { background: #FFD700; color: #FFF; }
         .rank-badge.top-2 { background: #C0C0C0; color: #FFF; }
@@ -123,18 +124,28 @@
                 </div>
             </div>
 
-            <div class="chart-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h3 style="margin:0; font-size: 16px; display: flex; align-items: center; gap: 8px;"><i data-lucide="calendar-clock" style="color: var(--brand-primary); width: 20px;"></i> 會員結構趨勢追蹤</h3>
-                    <select id="memberViewSelector" onchange="renderMemberCharts()" style="background: var(--brand-surface); border: none; color: var(--brand-brown); font-weight: 700; padding: 10px 20px; border-radius: 12px; outline: none; cursor: pointer;">
-                        <option value="daily">日檢視 (近14天)</option>
-                        <option value="weekly" selected>週檢視 (近10週)</option>
-                        <option value="monthly">月檢視 (近6個月)</option>
-                    </select>
+            <div class="chart-row" style="margin-bottom: 30px;">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h3 style="margin:0; font-size: 16px; display: flex; align-items: center; gap: 8px;"><i data-lucide="calendar-clock" style="color: var(--brand-primary); width: 20px;"></i> 會員結構趨勢追蹤</h3>
+                        <select id="memberViewSelector" onchange="renderMemberCharts()" style="background: var(--brand-surface); border: none; color: var(--brand-brown); font-weight: 700; padding: 8px 15px; border-radius: 8px; outline: none; cursor: pointer;">
+                            <option value="daily">日檢視 (近14天)</option>
+                            <option value="weekly" selected>週檢視 (近10週)</option>
+                            <option value="monthly">月檢視 (近6個月)</option>
+                            <option value="yearly">年檢視 (近12個月)</option>
+                        </select>
+                    </div>
+                    <div class="chart-row" style="margin-bottom: 0;">
+                        <div style="height: 300px; width: 100%;"><canvas id="structureChart"></canvas></div>
+                        <div style="height: 300px; width: 100%;"><canvas id="trendChart"></canvas></div>
+                    </div>
                 </div>
-                <div class="chart-row">
-                    <div style="height: 300px; width: 100%;"><canvas id="structureChart"></canvas></div>
-                    <div style="height: 300px; width: 100%;"><canvas id="trendChart"></canvas></div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <h3 class="chart-title"><i data-lucide="user-plus" style="color: var(--brand-primary); width: 20px;"></i> 新客獲取趨勢圖</h3>
+                    <div style="height: 300px; width: 100%;"><canvas id="newCustChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -146,16 +157,12 @@
                     <p id="lastSyncTextR" style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.6;">最後數據讀取日期：尚未讀取</p>
                 </div>
                 <div style="background: white; padding: 10px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 10px;">
-                    <label style="font-size: 14px; font-weight: bold; color: var(--brand-primary-dark);">分析時間區間：</label>
+                    <label style="font-size: 14px; font-weight: bold; color: var(--brand-primary-dark);">趨勢圖時間區間：</label>
                     <select id="revenueRangeSelector" onchange="fetchDashboardData()" style="background: var(--brand-surface); border: none; color: var(--brand-brown); font-weight: 700; padding: 8px 15px; border-radius: 8px; outline: none; cursor: pointer;">
-                        <option value="yesterday">昨天</option>
-                        <option value="last7days">近 7 日</option>
-                        <option value="thisWeek">本週</option>
-                        <option value="thisMonth" selected>本月</option>
-                        <option value="last30days">近 30 天</option>
-                        <option value="last3months">近 3 個月</option>
-                        <option value="last6months">近 6 個月</option>
-                        <option value="last12months">近 12 個月</option>
+                        <option value="daily">日檢視 (近14天)</option>
+                        <option value="weekly">週檢視 (近10週)</option>
+                        <option value="monthly" selected>月檢視 (近6個月)</option>
+                        <option value="yearly">年檢視 (近12個月)</option>
                     </select>
                 </div>
             </div>
@@ -180,87 +187,49 @@
                     <div style="height: 280px; width: 100%;"><canvas id="storeRevChart"></canvas></div>
                 </div>
                 <div class="chart-card">
-                    <h3 class="chart-title"><i data-lucide="ruler" style="color: var(--brand-primary); width: 20px;"></i> 新客首購尺寸偏好 (件)</h3>
+                    <h3 class="chart-title"><i data-lucide="ruler" style="color: var(--brand-primary); width: 20px;"></i> 全體尺寸偏好 (新舊客佔比)</h3>
                     <div style="height: 280px; width: 100%;"><canvas id="newCustSizeChart"></canvas></div>
                 </div>
             </div>
 
-            <div class="chart-card" style="overflow-y: auto; max-height: 500px; padding: 20px 30px;">
-                <h3 class="chart-title sticky top-0 bg-white pt-2 pb-2"><i data-lucide="flame" style="color: #F44336; width: 20px;"></i> 熱銷商品排行榜 (Top 10) <span style="font-size: 12px; font-weight: normal; color: #888;">*已排除特定滿額贈品</span></h3>
+            <div class="chart-card" style="overflow-y: auto; max-height: 550px; padding: 20px 30px;">
+                <h3 class="chart-title sticky top-0 bg-white pt-2 pb-2" style="margin-bottom: 10px;"><i data-lucide="flame" style="color: #F44336; width: 20px;"></i> 熱銷商品排行榜 (Top 10) <span style="font-size: 12px; font-weight: normal; color: #888;">*已排除特定滿額贈品</span></h3>
                 <table class="top-products-table" id="topProductsTable"></table>
             </div>
         </div>
 
         <div id="excelSection" class="card">
             <h2>Excel 資料同步中心</h2>
-            <div class="sync-tabs" style="margin-top: 20px;">
-                <div class="sync-tab active" onclick="setSyncType('members', this)">會員資料同步</div>
-                <div class="sync-tab" onclick="setSyncType('orders', this)">訂單紀錄匯入</div>
-                <div class="sync-tab" onclick="setSyncType('points', this)">紅利點數匯入</div>
-            </div>
+            <div class="sync-tabs" style="margin-top: 20px;"><div class="sync-tab active" onclick="setSyncType('members', this)">會員資料同步</div><div class="sync-tab" onclick="setSyncType('orders', this)">訂單紀錄匯入</div><div class="sync-tab" onclick="setSyncType('points', this)">紅利點數匯入</div></div>
             <div class="upload-zone" onclick="document.getElementById('excelFile').click()"><div id="uploadPlaceholder"><i data-lucide="file-up" style="width: 48px; height: 48px; margin-bottom: 15px; color: var(--brand-primary);"></i><h3 id="uploadTitle">點擊上傳 會員資料 Excel</h3></div><input type="file" id="excelFile" hidden accept=".xlsx, .xls" onchange="handleExcelSelect(event)"></div>
-            <div id="previewArea" style="display: none;" class="preview-area">
-                <h4 style="margin-bottom:15px; color: var(--brand-primary-dark);">資料預覽 (顯示前 5 筆)</h4>
-                <div style="overflow-x: auto; background: var(--brand-bg); padding: 15px; border-radius: 15px;"><table class="preview-table" id="previewTable" style="width:100%; border-collapse:collapse;"></table></div>
-                <div style="margin-top: 30px; text-align: right;"><button class="btn btn-primary" onclick="confirmAndSync()">確認同步</button></div>
-            </div>
+            <div id="previewArea" style="display: none;" class="preview-area"><h4 style="margin-bottom:15px; color: var(--brand-primary-dark);">資料預覽 (顯示前 5 筆)</h4><div style="overflow-x: auto; background: var(--brand-bg); padding: 15px; border-radius: 15px;"><table class="preview-table" id="previewTable" style="width:100%; border-collapse:collapse;"></table></div><div style="margin-top: 30px; text-align: right;"><button class="btn btn-primary" onclick="confirmAndSync()">確認同步</button></div></div>
         </div>
+
         <div id="posSection" class="card">
             <h2>查詢與核銷</h2>
             <div style="display:flex; gap:15px; margin-top:20px;"><input type="tel" id="searchPhone" style="flex:1; padding:15px; border-radius:12px; border:1px solid #ddd;" placeholder="會員電話"><button class="btn btn-primary" onclick="searchMember()">查詢</button></div>
             <div id="memberResult" style="display:none; margin-top:30px;"><h3 id="memName"></h3><div id="couponList"></div></div>
         </div>
+        
         <div id="marketingSection" class="card">
             <h2 style="margin-top: 0;">優惠券派發中心</h2>
             <p style="color: var(--brand-text-muted); font-size: 14px; margin-bottom: 30px; margin-top: -10px;">設定專屬活動優惠券，精準推播給目標會員</p>
-
             <div style="max-width: 600px; display: flex; flex-direction: column; gap: 20px;">
-                <div>
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">優惠券名稱 <span style="color:#F44336;">*</span></label>
-                    <input type="text" id="cpnName" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="例如：春季新品 9 折券" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'">
-                </div>
-                
-                <div>
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">優惠券圖片網址 (選填)</label>
-                    <input type="text" id="cpnImg" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="輸入圖片 URL..." onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'">
-                </div>
-                
-                <div>
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">使用期限 <span style="color:#F44336;">*</span></label>
-                    <input type="date" id="cpnExp" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; color: var(--brand-brown);" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'">
-                </div>
-                
-                <div>
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">使用條款 / 備註</label>
-                    <textarea id="cpnTerms" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; height: 80px; resize: none;" placeholder="例如：滿千折百，不可與其他優惠併用" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'"></textarea>
-                </div>
-
-                <div>
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">發送對象 <span style="color:#F44336;">*</span></label>
-                    <select id="cpnTargetType" onchange="togglePhoneInput()" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; background: white; color: var(--brand-brown); cursor: pointer;" onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'">
-                        <option value="single">單一會員 (輸入電話)</option>
-                        <option value="vip">所有 VIP 核心會員 (自動篩選)</option>
-                        <option value="all">全體會員 (大量發送)</option>
-                    </select>
-                </div>
-                
-                <div id="phoneInputBox">
-                    <label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">目標會員電話 <span style="color:#F44336;">*</span></label>
-                    <input type="tel" id="cpnTargetVal" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="請輸入欲發送的會員電話..." onfocus="this.style.borderColor='var(--brand-primary)'" onblur="this.style.borderColor='var(--brand-surface)'">
-                </div>
-
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-primary" onclick="sendCoupon()">
-                        <i data-lucide="send"></i> 確認發送優惠券
-                    </button>
-                </div>
+                <div><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">優惠券名稱 <span style="color:#F44336;">*</span></label><input type="text" id="cpnName" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="例如：春季新品 9 折券"></div>
+                <div><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">優惠券圖片網址 (選填)</label><input type="text" id="cpnImg" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="輸入圖片 URL..."></div>
+                <div><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">使用期限 <span style="color:#F44336;">*</span></label><input type="date" id="cpnExp" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; color: var(--brand-brown);"></div>
+                <div><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">使用條款 / 備註</label><textarea id="cpnTerms" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; height: 80px; resize: none;" placeholder="例如：滿千折百，不可與其他優惠併用"></textarea></div>
+                <div><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">發送對象 <span style="color:#F44336;">*</span></label><select id="cpnTargetType" onchange="togglePhoneInput()" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s; background: white; color: var(--brand-brown); cursor: pointer;"><option value="single">單一會員 (輸入電話)</option><option value="vip">所有 VIP 核心會員 (自動篩選)</option><option value="all">全體會員 (大量發送)</option></select></div>
+                <div id="phoneInputBox"><label style="font-weight: 700; font-size: 14px; color: var(--brand-primary-dark); display: block; margin-bottom: 8px;">目標會員電話 <span style="color:#F44336;">*</span></label><input type="tel" id="cpnTargetVal" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--brand-surface); font-size: 14px; outline: none; transition: 0.3s;" placeholder="請輸入欲發送的會員電話..."></div>
+                <div style="margin-top: 10px;"><button class="btn btn-primary" onclick="sendCoupon()"><i data-lucide="send"></i> 確認發送優惠券</button></div>
             </div>
         </div>
     </main>
 
     <script>
         lucide.createIcons();
-        const API_URL = "https://script.google.com/macros/s/AKfycbwvF_5IqTS22DMExw3eZLsZOFseOLKVyyWorUBsrX4ZbHkMnyTQkhXMQg5ZoShgDuu7/exec";
+        // ⭐ 請把這裡換回你自己的 API_URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbzEAq_c4yt0dpXXjQgwdGy5QQyKczcbhABH6GtfdbQWAIss3s-2WFqn9Ra5WTW_ebeq/exec";
         let PASSWORD = "";
         let currentSyncType = 'members';
         let excelData = null;
@@ -270,7 +239,7 @@
         function showLoading(text="處理中...") { document.getElementById('loadingText').innerText = text; document.getElementById('loadingOverlay').style.display = 'flex'; }
         function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
-        function login() {
+       function login() {
             var pwd = document.getElementById('adminPwd').value;
             if(!pwd) return Swal.fire('錯誤', '請輸入密碼', 'error');
             showLoading("身分驗證中...");
@@ -284,6 +253,11 @@
                     document.getElementById('mainContent').style.display = 'block';
                     fetchDashboardData(); 
                 } else { Swal.fire('登入失敗', '密碼不正確', 'error'); }
+            }).catch(e => {
+                // ⭐️ 加上錯誤捕捉，防止無限轉圈
+                hideLoading();
+                Swal.fire('連線失敗', '後端伺服器錯誤，請確認 GAS 已正確部署', 'error');
+                console.error(e);
             });
         }
 
@@ -293,7 +267,10 @@
             document.getElementById(id + 'Section').classList.add('active');
             btn.classList.add('active');
             if(id === 'memberDash') renderMemberCharts();
-            if(id === 'revenueDash') renderRevenueCharts();
+            if(id === 'revenueDash') {
+                const range = document.getElementById('revenueRangeSelector').value;
+                renderRevenueCharts(range);
+            }
         }
 
         // === 向後端請求資料 ===
@@ -312,14 +289,14 @@
                     const s = res.data;
                     const rData = s.revenueData;
 
-                    // 會員面板
+                    // 會員面板 KPI
                     document.getElementById('stat-total').innerText = (s.total || 0).toLocaleString();
                     document.getElementById('stat-vip').innerText = (s.vipTotal || 0).toLocaleString();
                     document.getElementById('stat-vip-ratio').innerText = `佔比 ${s.total ? Math.round((s.vipTotal/s.total)*100) : 0}%`;
                     document.getElementById('stat-active').innerText = (s.statusAll.active || 0).toLocaleString();
                     document.getElementById('stat-lost').innerText = ((s.statusAll.edge || 0) + (s.statusAll.lost || 0)).toLocaleString();
                     
-                    // 營收面板
+                    // 營收面板 KPI
                     document.getElementById('stat-rev-month').innerText = '$' + rData.current.rev.toLocaleString();
                     document.getElementById('stat-orders').innerText = rData.current.ord.toLocaleString();
                     document.getElementById('stat-aov').innerText = '$' + (rData.current.ord > 0 ? Math.round(rData.current.rev / rData.current.ord) : 0).toLocaleString();
@@ -340,7 +317,7 @@
                     renderTopProducts(rData.products);
                     renderSizeChart(rData.sizes);
                     renderMemberCharts();
-                    renderRevenueCharts(selectedRange); // 傳入範圍以決定顯示日/月
+                    renderRevenueCharts(selectedRange); 
                     
                     let timeNow = `最後讀取：${new Date().toLocaleTimeString()}`;
                     document.getElementById('lastSyncTextM').innerText = timeNow;
@@ -385,7 +362,12 @@
         function renderMemberCharts() {
             if (!globalData.history || globalData.history.length === 0) return;
             const viewType = document.getElementById('memberViewSelector').value;
-            let hist = filterByView(globalData.history, viewType, 'date');
+            
+            let limit = viewType === 'daily' ? 14 : (viewType === 'weekly' ? 10 : (viewType === 'yearly' ? 12 : 6));
+            let timeSetting = viewType === 'yearly' ? 'monthly' : viewType; 
+            
+            let hist = filterByView(globalData.history, timeSetting, 'date', false, limit);
+            if (hist.length === 0) { let today = new Date(); let fakeDate = (today.getMonth() + 1) + '/' + today.getDate(); hist = [{ displayDate: fakeDate, totalRates: [0,0,0,0,0], vipRates: [0,0,0,0,0] }]; }
             
             if (charts.structure) charts.structure.destroy();
             charts.structure = new Chart(document.getElementById('structureChart').getContext('2d'), {
@@ -407,15 +389,45 @@
                     { label: 'VIP 活躍率', data: hist.map(h => h.vipRates[0]), borderColor: '#4A4138', backgroundColor: '#4A4138', tension: 0.3 }
                 ]}, options: { maintainAspectRatio: false }
             });
+
+            if (globalData.data && globalData.data.newCustDaily) {
+                let rawNewCust = Object.keys(globalData.data.newCustDaily).map(k => ({ date: k, count: globalData.data.newCustDaily[k] })).sort((a,b)=>a.date.localeCompare(b.date));
+                let newCustHist = filterByView(rawNewCust, timeSetting, 'date', true, limit);
+
+                if (charts.newCust) charts.newCust.destroy();
+                charts.newCust = new Chart(document.getElementById('newCustChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: newCustHist.map(h => h.displayDate), datasets: [{ label: '新客獲取人數', data: newCustHist.map(h => h.count), backgroundColor: '#E2C8BA', borderRadius: 4 }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#F5F2EE' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+                });
+            }
         }
 
         // === 營收面板邏輯 ===
         function renderTopProducts(products) {
-            let html = `<tr><th>排名</th><th>商品完整名稱</th><th>總銷量</th><th>營收貢獻</th></tr>`;
-            if(products.length === 0) { html += `<tr><td colspan="4" style="text-align:center;">該區間無銷售資料</td></tr>`; }
+            let html = `<tr><th>排名</th><th>商品</th><th>總銷量</th><th>營收貢獻</th></tr>`;
+            if(products.length === 0) { html += `<tr><td colspan="4" style="text-align:center; padding: 40px;">該區間無銷售資料</td></tr>`; }
+            
             products.forEach((p, i) => {
                 let badgeClass = i===0 ? 'top-1' : (i===1 ? 'top-2' : (i===2 ? 'top-3' : ''));
-                html += `<tr><td><span class="rank-badge ${badgeClass}">${i+1}</span></td><td>${p.name}</td><td><b>${p.qty}</b> 件</td><td style="color: var(--brand-primary-dark); font-weight: bold;">$${p.rev.toLocaleString()}</td></tr>`;
+                
+                // ⭐️ 圖片稍微放大到 52px，並調整無圖時的底色與排版
+                let imgHtml = p.img 
+                    ? `<img src="${p.img}" style="width: 52px; height: 52px; border-radius: 10px; object-fit: cover; border: 1px solid #eae5de; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">` 
+                    : `<div style="width: 52px; height: 52px; background: #f0ebe4; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #a39a92; flex-shrink: 0;">無圖</div>`;
+
+                // ⭐️ 將圖片與文字的間距 (gap) 拉開到 16px，提升閱讀舒適度
+                html += `<tr>
+                    <td style="width: 60px;"><span class="rank-badge ${badgeClass}">${i+1}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            ${imgHtml}
+                            <span style="line-height: 1.5; font-weight: 500;">${p.name}</span>
+                        </div>
+                    </td>
+                    <td style="width: 90px; color: var(--brand-text-muted);"><b>${p.qty}</b> 件</td>
+                    <td style="color: var(--brand-primary-dark); font-weight: 700; width: 110px; font-size: 15px;">$${p.rev.toLocaleString()}</td>
+                </tr>`;
             });
             document.getElementById('topProductsTable').innerHTML = html;
         }
@@ -430,21 +442,8 @@
             
             charts.size = new Chart(document.getElementById('newCustSizeChart').getContext('2d'), {
                 type: 'bar',
-                data: { 
-                    labels: labels, 
-                    datasets: [
-                        { label: '新客首購', data: newData, backgroundColor: '#E2C8BA', borderRadius: 4 },
-                        { label: '舊客回購', data: oldData, backgroundColor: '#4A4138', borderRadius: 4 }
-                    ] 
-                },
-                options: { 
-                    maintainAspectRatio: false, 
-                    scales: {
-                        x: { stacked: true },
-                        y: { stacked: true, grid: { color: '#F5F2EE' } }
-                    },
-                    plugins: { legend: { position: 'bottom' } } 
-                }
+                data: { labels: labels, datasets: [{ label: '新客購買', data: newData, backgroundColor: '#E2C8BA', borderRadius: 4 }, { label: '舊客回購', data: oldData, backgroundColor: '#4A4138', borderRadius: 4 }] },
+                options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, grid: { color: '#F5F2EE' } } }, plugins: { legend: { position: 'bottom' } } }
             });
         }
 
@@ -460,13 +459,15 @@
                 options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             });
 
-            // 根據區間設定圖表顯示模式 (不刪剪資料，讓 X 軸自動縮放)
+            // 營收圖表時間設定
             let timeSetting = 'daily';
-            if (range === 'last3months' || range === 'last6months' || range === 'last12months') timeSetting = 'monthly';
-            else if (range === 'last30days') timeSetting = 'weekly';
+            if (range === 'last3months' || range === 'last6months' || range === 'last12months' || range === 'monthly' || range === 'yearly') timeSetting = 'monthly';
+            else if (range === 'last30days' || range === 'weekly') timeSetting = 'weekly';
+
+            let limit = range === 'yearly' ? 12 : (range === 'last6months' || range === 'monthly' ? 6 : (range === 'last3months' ? 3 : (range === 'last30days' || range === 'weekly' ? 10 : 14)));
 
             let rawDaily = Object.keys(rData.daily).map(k => ({ date: k, rev: rData.daily[k].rev, ord: rData.daily[k].ord })).sort((a,b)=>a.date.localeCompare(b.date));
-            let hist = filterByView(rawDaily, timeSetting, 'date', true);
+            let hist = filterByView(rawDaily, timeSetting, 'date', true, limit);
 
             if (charts.revTrend) charts.revTrend.destroy();
             charts.revTrend = new Chart(document.getElementById('revenueTrendChart').getContext('2d'), {
@@ -478,18 +479,12 @@
                         { type: 'bar', label: '營收 (左軸)', data: hist.map(h => h.rev), backgroundColor: '#E2C8BA', borderRadius: 4, yAxisID: 'y' }
                     ]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { type: 'linear', display: true, position: 'left', grid: { color: '#F5F2EE' } },
-                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
-                    }
-                }
+                options: { maintainAspectRatio: false, scales: { y: { type: 'linear', display: true, position: 'left', grid: { color: '#F5F2EE' } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } } } }
             });
         }
 
-        // --- 修正後的動態聚合邏輯 (讓資料不再被截斷) ---
-        function filterByView(array, view, dateKey, isSum = false) {
+        // --- 共用時間聚合函數 ---
+        function filterByView(array, view, dateKey, isSum = false, limit = null) {
             let res = [];
             if (view === 'daily') {
                 res = array.map(item => ({...item, displayDate: item[dateKey].substring(5)}));
@@ -502,11 +497,12 @@
                         if(tempObj) res.push(tempObj);
                         currentBucket = weekStr; tempObj = {...array[i], displayDate: weekStr};
                     } else if (isSum) {
-                        tempObj.rev += array[i].rev; tempObj.ord += array[i].ord;
+                        if(tempObj.rev !== undefined) tempObj.rev += array[i].rev;
+                        if(tempObj.ord !== undefined) tempObj.ord += array[i].ord;
+                        if(tempObj.count !== undefined) tempObj.count += array[i].count;
                     } else { tempObj = {...array[i], displayDate: weekStr}; }
                 }
                 if(tempObj) res.push(tempObj);
-                if(!isSum) res = res.slice(-10); // 會員趨勢圖維持最多看 10 週
             } else if (view === 'monthly') {
                 let currentBucket = ""; let tempObj = null;
                 for (let i = 0; i < array.length; i++) {
@@ -516,118 +512,25 @@
                         if(tempObj) res.push(tempObj);
                         currentBucket = monthStr; tempObj = {...array[i], displayDate: monthStr};
                     } else if (isSum) {
-                        tempObj.rev += array[i].rev; tempObj.ord += array[i].ord;
+                        if(tempObj.rev !== undefined) tempObj.rev += array[i].rev;
+                        if(tempObj.ord !== undefined) tempObj.ord += array[i].ord;
+                        if(tempObj.count !== undefined) tempObj.count += array[i].count;
                     } else { tempObj = {...array[i], displayDate: monthStr}; }
                 }
                 if(tempObj) res.push(tempObj);
-                if(!isSum) res = res.slice(-12);
             }
+            if (limit) res = res.slice(-limit);
             return res;
         }
 
-        // --- Excel 同步邏輯 (保持不變) ---
-        function setSyncType(type, btn) {
-            currentSyncType = type; document.querySelectorAll('.sync-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active');
-            const titleMap = { 'members': '會員資料 Excel', 'orders': '訂單紀錄 Excel', 'points': '紅利點數 Excel' };
-            document.getElementById('uploadTitle').innerText = `點擊上傳 ${titleMap[type]}`; document.getElementById('previewArea').style.display = 'none';
-        }
-        function handleExcelSelect(e) {
-            const file = e.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                let skipRange = currentSyncType === 'orders' ? 3 : (currentSyncType === 'points' ? 2 : 0);
-                excelData = XLSX.utils.sheet_to_json(worksheet, { range: skipRange });
-                if (excelData.length > 0) { renderPreview(excelData.slice(0, 5)); document.getElementById('previewArea').style.display = 'block'; }
-            }; reader.readAsArrayBuffer(file);
-        }
-        function renderPreview(data) {
-            const table = document.getElementById('previewTable'); const headers = Object.keys(data[0]);
-            let html = `<tr>${headers.map(h => `<th style="padding:10px; text-align:left; font-size:12px; border-bottom:2px solid #E2C8BA;">${h}</th>`).join('')}</tr>`;
-            data.forEach(row => { html += `<tr>${headers.map(h => `<td style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">${row[h] || ''}</td>`).join('')}</tr>`; });
-            table.innerHTML = html;
-        }
-        async function confirmAndSync() {
-            if (!excelData) return;
-            const actionMap = { 'members': 'batch_update_members', 'orders': 'batch_add_orders', 'points': 'batch_add_points' };
-            showLoading(`同步中...`);
-            try {
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: actionMap[currentSyncType], password: PASSWORD, data: excelData }) });
-                const res = await response.json(); hideLoading();
-                if (res.status === 'success') { Swal.fire('成功', '資料已同步至雲端', 'success'); document.getElementById('previewArea').style.display = 'none'; } 
-                else { Swal.fire('失敗', res.message, 'error'); }
-            } catch (e) { hideLoading(); Swal.fire('連線錯誤', '無法傳送至 GAS', 'error'); }
-        }
-        function searchMember() {
-            var phone = document.getElementById('searchPhone').value; if(!phone) return;
-            showLoading("查詢中...");
-            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_search', password: PASSWORD, phone: phone }) })
-            .then(r => r.json()).then(res => { hideLoading(); if(res.status !== 'success') return Swal.fire('查無資料', res.message, 'error');
-                document.getElementById('memName').innerText = res.data.name; document.getElementById('memberResult').style.display = 'block'; });
-        }
-        // === 優惠券派發邏輯 ===
-        function togglePhoneInput() {
-            const type = document.getElementById('cpnTargetType').value;
-            document.getElementById('phoneInputBox').style.display = (type === 'single') ? 'block' : 'none';
-        }
-
-        async function sendCoupon() {
-            const name = document.getElementById('cpnName').value.trim();
-            const img = document.getElementById('cpnImg').value.trim();
-            const exp = document.getElementById('cpnExp').value;
-            const terms = document.getElementById('cpnTerms').value.trim();
-            const type = document.getElementById('cpnTargetType').value;
-            const val = document.getElementById('cpnTargetVal').value.trim();
-
-            if (!name || !exp) return Swal.fire('錯誤', '請填寫優惠券名稱與使用期限！', 'error');
-            if (type === 'single' && !val) return Swal.fire('錯誤', '選擇單一發送時，請填寫目標會員電話！', 'error');
-
-            const confirmStr = type === 'all' ? '「全體會員」' : (type === 'vip' ? '「所有 VIP」' : `「${val}」`);
-            const result = await Swal.fire({
-                title: '確認發送?',
-                text: `確定要將「${name}」發送給 ${confirmStr} 嗎？此操作不可逆！`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: '確定發送',
-                cancelButtonText: '取消'
-            });
-
-            if (result.isConfirmed) {
-                showLoading("發送優惠券中...");
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: 'give_coupon',
-                            password: PASSWORD,
-                            couponName: name,
-                            couponImg: img,
-                            expiryDate: exp,
-                            couponTerms: terms,
-                            targetType: type,
-                            targetValue: val
-                        })
-                    });
-                    const res = await response.json();
-                    hideLoading();
-                    
-                    if (res.status === 'success') {
-                        Swal.fire('發送成功！', res.message, 'success');
-                        // 清空表單
-                        document.getElementById('cpnName').value = '';
-                        document.getElementById('cpnImg').value = '';
-                        document.getElementById('cpnExp').value = '';
-                        document.getElementById('cpnTerms').value = '';
-                        document.getElementById('cpnTargetVal').value = '';
-                    } else {
-                        Swal.fire('發送失敗', res.message, 'error');
-                    }
-                } catch (e) {
-                    hideLoading();
-                    Swal.fire('錯誤', '連線失敗，請檢查網路狀態', 'error');
-                }
-            }
-        }
+        // --- 以下為 Excel 同步與派發優惠券邏輯 (保持不變) ---
+        function setSyncType(type, btn) { currentSyncType = type; document.querySelectorAll('.sync-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); const titleMap = { 'members': '會員資料 Excel', 'orders': '訂單紀錄 Excel', 'points': '紅利點數 Excel' }; document.getElementById('uploadTitle').innerText = `點擊上傳 ${titleMap[type]}`; document.getElementById('previewArea').style.display = 'none'; }
+        function handleExcelSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const worksheet = workbook.Sheets[workbook.SheetNames[0]]; let skipRange = currentSyncType === 'orders' ? 3 : (currentSyncType === 'points' ? 2 : 0); excelData = XLSX.utils.sheet_to_json(worksheet, { range: skipRange }); if (excelData.length > 0) { renderPreview(excelData.slice(0, 5)); document.getElementById('previewArea').style.display = 'block'; } }; reader.readAsArrayBuffer(file); }
+        function renderPreview(data) { const table = document.getElementById('previewTable'); const headers = Object.keys(data[0]); let html = `<tr>${headers.map(h => `<th style="padding:10px; text-align:left; font-size:12px; border-bottom:2px solid #E2C8BA;">${h}</th>`).join('')}</tr>`; data.forEach(row => { html += `<tr>${headers.map(h => `<td style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">${row[h] || ''}</td>`).join('')}</tr>`; }); table.innerHTML = html; }
+        async function confirmAndSync() { if (!excelData) return; const actionMap = { 'members': 'batch_update_members', 'orders': 'batch_add_orders', 'points': 'batch_add_points' }; showLoading(`同步中...`); try { const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: actionMap[currentSyncType], password: PASSWORD, data: excelData }) }); const res = await response.json(); hideLoading(); if (res.status === 'success') { Swal.fire('成功', '資料已同步至雲端', 'success'); document.getElementById('previewArea').style.display = 'none'; } else { Swal.fire('失敗', res.message, 'error'); } } catch (e) { hideLoading(); Swal.fire('連線錯誤', '無法傳送至 GAS', 'error'); } }
+        function searchMember() { var phone = document.getElementById('searchPhone').value; if(!phone) return; showLoading("查詢中..."); fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_search', password: PASSWORD, phone: phone }) }).then(r => r.json()).then(res => { hideLoading(); if(res.status !== 'success') return Swal.fire('查無資料', res.message, 'error'); document.getElementById('memName').innerText = res.data.name; document.getElementById('memberResult').style.display = 'block'; }); }
+        function togglePhoneInput() { const type = document.getElementById('cpnTargetType').value; document.getElementById('phoneInputBox').style.display = (type === 'single') ? 'block' : 'none'; }
+        async function sendCoupon() { const name = document.getElementById('cpnName').value.trim(); const img = document.getElementById('cpnImg').value.trim(); const exp = document.getElementById('cpnExp').value; const terms = document.getElementById('cpnTerms').value.trim(); const type = document.getElementById('cpnTargetType').value; const val = document.getElementById('cpnTargetVal').value.trim(); if (!name || !exp) return Swal.fire('錯誤', '請填寫優惠券名稱與使用期限！', 'error'); if (type === 'single' && !val) return Swal.fire('錯誤', '選擇單一發送時，請填寫目標會員電話！', 'error'); const confirmStr = type === 'all' ? '「全體會員」' : (type === 'vip' ? '「所有 VIP」' : `「${val}」`); const result = await Swal.fire({ title: '確認發送?', text: `確定要將「${name}」發送給 ${confirmStr} 嗎？此操作不可逆！`, icon: 'warning', showCancelButton: true, confirmButtonText: '確定發送', cancelButtonText: '取消' }); if (result.isConfirmed) { showLoading("發送優惠券中..."); try { const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'give_coupon', password: PASSWORD, couponName: name, couponImg: img, expiryDate: exp, couponTerms: terms, targetType: type, targetValue: val }) }); const res = await response.json(); hideLoading(); if (res.status === 'success') { Swal.fire('發送成功！', res.message, 'success'); document.getElementById('cpnName').value = ''; document.getElementById('cpnImg').value = ''; document.getElementById('cpnExp').value = ''; document.getElementById('cpnTerms').value = ''; document.getElementById('cpnTargetVal').value = ''; } else { Swal.fire('發送失敗', res.message, 'error'); } } catch (e) { hideLoading(); Swal.fire('錯誤', '連線失敗，請檢查網路狀態', 'error'); } } }
     </script>
 </body>
 </html>
