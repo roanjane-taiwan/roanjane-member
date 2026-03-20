@@ -679,6 +679,7 @@
                     <span class="inline-block px-3 py-1 bg-brand-primary/20 text-brand-primaryDark text-[10px] font-bold tracking-[0.2em] rounded-full mb-3 uppercase">${levelName}</span>
                     <h2 class="text-2xl font-bold text-brand-brown mb-1 tracking-widest">${memberData.name}</h2>
                     <p class="text-brand-primaryDark text-xs mb-4 tracking-widest font-light">${memberData.phone}</p>
+                    <button onclick="logout()" class="text-[9px] text-brand-primaryDark/30 mt-1 mb-2">切換帳號</button>
                     <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-2">
                         <div class="barcode mb-2"></div>
                         <p class="text-[10px] text-gray-400 tracking-[0.3em] font-mono">${memberData.phone}</p>
@@ -988,7 +989,11 @@
         }
         lucide.createIcons();
     }
-
+function logout() {
+    if (!confirm("確定要切換帳號嗎？")) return;
+    localStorage.removeItem('memberCache');
+    location.reload();
+}
     // ==========================================
     // 啟動
     // ==========================================
