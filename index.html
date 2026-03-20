@@ -484,9 +484,7 @@
     // ==========================================
     async function silentRefresh(lineId) {
         try {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) return;
-            const profile = await liff.getProfile();
+            
             const response = await fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "line_auto_login", lineId: profile.userId })
