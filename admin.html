@@ -229,7 +229,7 @@
     <script>
         lucide.createIcons();
         // ⭐ 請把這裡換回你自己的 API_URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbxkTX0uusxoN4_nb3ekVwESf-qgGaZ2EIOSPNPYVRCy3gXmcBNkjEMfKL5wH9bJOO9J/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxqnxJsmHok4_xSetZy-7ya9xE1AAm4aAF-sHXNW5SQBX2vs0ufRS9SSfpdboks7Kd2/exec";
         let PASSWORD = "";
         let currentSyncType = 'members';
         let excelData = null;
@@ -329,21 +329,21 @@
 
         // === 會員面板邏輯 ===
         function getHealthLight(rate, type, isVip = false) {
-            if (isVip) {
-                if (type === 'active') return rate < 25 ? '🔴 偏弱' : (rate < 30 ? '🟠 注意' : '🟢 正常');
-                if (type === 'cool1') return rate > 15 ? '🔴 偏高' : (rate > 10 ? '🟠 注意' : '🟢 正常');
-                if (type === 'cool2') return rate > 15 ? '🔴 偏高' : (rate > 10 ? '🟠 注意' : '🟢 正常');
-                if (type === 'edge')  return rate > 10 ? '🔴 危險' : (rate > 5 ? '🟠 注意' : '🟢 正常');
-                if (type === 'lost')  return rate > 25 ? '🔴 需召回' : (rate > 20 ? '🟠 偏高' : '🟢 正常');
-            } else {
-                if (type === 'active') return rate < 20 ? '🔴 偏弱' : (rate < 25 ? '🟠 注意' : '🟢 正常');
-                if (type === 'cool1') return rate > 20 ? '🔴 偏高' : (rate > 15 ? '🟠 注意' : '🟢 正常');
-                if (type === 'cool2') return rate > 20 ? '🔴 偏高' : (rate > 15 ? '🟠 注意' : '🟢 正常');
-                if (type === 'edge')  return rate > 15 ? '🔴 危險' : (rate > 10 ? '🟠 注意' : '🟢 正常');
-                if (type === 'lost')  return rate > 35 ? '🔴 需召回' : (rate > 30 ? '🟠 偏高' : '🟢 正常');
-            }
-            return '-';
-        }
+    if (isVip) {
+        if (type === 'active') return rate < 35 ? '🔴 偏弱' : (rate < 45 ? '🟠 注意' : '🟢 正常');
+        if (type === 'cool1')  return rate > 18 ? '🔴 偏高' : (rate > 12 ? '🟠 注意' : '🟢 正常');
+        if (type === 'cool2')  return rate > 25 ? '🔴 偏高' : (rate > 18 ? '🟠 注意' : '🟢 正常');
+        if (type === 'edge')   return rate > 8  ? '🔴 危險' : (rate > 5  ? '🟠 注意' : '🟢 正常');
+        if (type === 'lost')   return rate > 28 ? '🔴 需召回' : (rate > 18 ? '🟠 偏高' : '🟢 正常');
+    } else {
+        if (type === 'active') return rate < 25 ? '🔴 偏弱' : (rate < 35 ? '🟠 注意' : '🟢 正常');
+        if (type === 'cool1')  return rate > 25 ? '🔴 偏高' : (rate > 18 ? '🟠 注意' : '🟢 正常');
+        if (type === 'cool2')  return rate > 35 ? '🔴 偏高' : (rate > 25 ? '🟠 注意' : '🟢 正常');
+        if (type === 'edge')   return rate > 10 ? '🔴 危險' : (rate > 7  ? '🟠 注意' : '🟢 正常');
+        if (type === 'lost')   return rate > 28 ? '🔴 需召回' : (rate > 20 ? '🟠 偏高' : '🟢 正常');
+    }
+    return '-';
+}
 
         function renderHealthTable(all, vip, totalAll, totalVip) {
             const stages = [{ name: "活躍會員", key: "active", type: "active" }, { name: "冷卻初期", key: "cool1", type: "cool1" }, { name: "冷卻中期", key: "cool2", type: "cool2" }, { name: "流失邊緣", key: "edge", type: "edge" }, { name: "已流失", key: "lost", type: "lost" }];
@@ -367,6 +367,7 @@
             let timeSetting = viewType === 'yearly' ? 'monthly' : viewType; 
             
             let hist = filterByView(globalData.history, timeSetting, 'date', false, limit);
+            hist = hist.map(h => ({...h, displayDate: formatSnapDate(h.date)}));
             if (hist.length === 0) { let today = new Date(); let fakeDate = (today.getMonth() + 1) + '/' + today.getDate(); hist = [{ displayDate: fakeDate, totalRates: [0,0,0,0,0], vipRates: [0,0,0,0,0] }]; }
             
             if (charts.structure) charts.structure.destroy();
@@ -489,14 +490,17 @@
             if (view === 'daily') {
                 res = array.map(item => ({...item, displayDate: item[dateKey].substring(5)}));
             } else if (view === 'weekly') {
-                let currentBucket = ""; let tempObj = null;
-                for (let i = 0; i < array.length; i++) {
-                    let d = new Date(array[i][dateKey]);
-                    let weekStr = d.getFullYear() + "-W" + Math.ceil(d.getDate() / 7);
-                    if (weekStr !== currentBucket) {
-                        if(tempObj) res.push(tempObj);
-                        currentBucket = weekStr; tempObj = {...array[i], displayDate: weekStr};
-                    } else if (isSum) {
+    let currentBucket = ""; let tempObj = null;
+    for (let i = 0; i < array.length; i++) {
+        let d = new Date(array[i][dateKey]);
+        let weekStr = d.getFullYear() + "-W" + Math.ceil(d.getDate() / 7);
+        if (weekStr !== currentBucket) {
+            if(tempObj) res.push(tempObj);
+            currentBucket = weekStr;
+            // ⭐️ 把 weekStr 換成 formatSnapDate
+            tempObj = {...array[i], displayDate: formatSnapDate(array[i][dateKey])};
+        } else if (isSum) {
+            // ... 其餘不變
                         if(tempObj.rev !== undefined) tempObj.rev += array[i].rev;
                         if(tempObj.ord !== undefined) tempObj.ord += array[i].ord;
                         if(tempObj.count !== undefined) tempObj.count += array[i].count;
@@ -522,7 +526,19 @@
             if (limit) res = res.slice(-limit);
             return res;
         }
-
+function formatSnapDate(dateVal) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const d = new Date(dateVal);
+    const month = months[d.getMonth()];
+    
+    // 計算是當月第幾週
+    const day = d.getDate();
+    const week = Math.ceil(day / 7);
+    
+    return `${month} W${week}`;
+}
+       
         // --- 以下為 Excel 同步與派發優惠券邏輯 (保持不變) ---
         function setSyncType(type, btn) { currentSyncType = type; document.querySelectorAll('.sync-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); const titleMap = { 'members': '會員資料 Excel', 'orders': '訂單紀錄 Excel', 'points': '紅利點數 Excel' }; document.getElementById('uploadTitle').innerText = `點擊上傳 ${titleMap[type]}`; document.getElementById('previewArea').style.display = 'none'; }
         function handleExcelSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const worksheet = workbook.Sheets[workbook.SheetNames[0]]; let skipRange = currentSyncType === 'orders' ? 3 : (currentSyncType === 'points' ? 2 : 0); excelData = XLSX.utils.sheet_to_json(worksheet, { range: skipRange }); if (excelData.length > 0) { renderPreview(excelData.slice(0, 5)); document.getElementById('previewArea').style.display = 'block'; } }; reader.readAsArrayBuffer(file); }
